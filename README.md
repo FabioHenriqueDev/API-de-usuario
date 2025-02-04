@@ -1,7 +1,5 @@
 # API-de-usuario
 
-Aqui está uma legenda que você pode usar para apresentar sua API no repositório do GitHub:
-
 🚀 API de Gerenciamento de Usuários com Flask e SQLAlchemy
 Esta API foi desenvolvida com Flask e SQLAlchemy para realizar operações CRUD (Create, Read, Update, Delete) em usuários.
 
