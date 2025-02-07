@@ -9,6 +9,7 @@ from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
 from flask_bcrypt import Bcrypt
+import re
 
 load_dotenv()
 
@@ -48,7 +49,10 @@ def create_user():
     if len(dados['senha']) < 6:
         return jsonify({'Error': 'A senha deve ter mais que 5 caracteres'})
     
+    email_padrao = r'^[\w\.-]+@[\w\.-]+\.\w+$'
 
+    if not re.match(email_padrao, dados['email']):
+        return jsonify({'Erro': 'Digite um E-mail válido'})
 
     senha_criptografada = bcrypt.generate_password_hash(dados['senha'])
 
