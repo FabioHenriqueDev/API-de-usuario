@@ -2,7 +2,7 @@
 Esta API foi desenvolvida com Flask e SQLAlchemy para realizar operações CRUD (Create, Read, Update, Delete) em usuários. Agora, também conta com o envio automático de e-mail ao cadastrar um novo usuário!
 
 🔹 Principais Funcionalidades
-✅ Criar um usuário com nome e e-mail
+✅ Criar um usuário com nome, e-mail e senha
 ✅ Enviar um e-mail de boas-vindas ao usuário após o cadastro ✉️
 ✅ Listar todos os usuários cadastrados
 ✅ Buscar um usuário pelo ID

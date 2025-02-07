@@ -8,6 +8,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
+from flask_bcrypt import Bcrypt
 
 load_dotenv()
 
@@ -16,17 +17,27 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db.init_app(app) 
 CORS(app)
 
+bcrypt = Bcrypt(app)
+
 from models import Usuario
 
 with app.app_context():
+    db.drop_all()
     db.create_all()
 
 @app.route('/user/create', methods=['POST'])
 def create_user():
     dados = request.get_json()
+
+    if 'senha' not in dados or not dados['senha']:
+        return jsonify({'Error': 'Senha é obrigatória'})
+
+    senha_criptografada = bcrypt.generate_password_hash(dados['senha'])
+
     usuario= Usuario(
         nome=dados['nome'],
-        email=dados['email']
+        email=dados['email'],
+        senha=senha_criptografada
     )
 
 
