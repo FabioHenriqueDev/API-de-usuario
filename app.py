@@ -29,8 +29,26 @@ with app.app_context():
 def create_user():
     dados = request.get_json()
 
+    if 'nome' not in dados or not dados['nome']:
+        return jsonify({'Error': 'O Nome é Obrigatório'})
+
+    
+    if 'email' not in dados or not dados['email']:
+        return jsonify({'Error': 'O E-mail é Obrigatório'})
+
+
     if 'senha' not in dados or not dados['senha']:
-        return jsonify({'Error': 'Senha é obrigatória'})
+        return jsonify({'Error': 'Senha é Obrigatória'})
+    
+    
+    if len(dados['nome']) < 2:
+        return jsonify({'Error': 'O Username tem que ter no mínimo 2 caracteres'})
+
+
+    if len(dados['senha']) < 6:
+        return jsonify({'Error': 'A senha deve ter mais que 5 caracteres'})
+    
+
 
     senha_criptografada = bcrypt.generate_password_hash(dados['senha'])
 
@@ -83,8 +101,8 @@ def create_user():
 
     db.session.add(usuario)
     db.session.commit()
-    # Enviando o e-mail
     
+    # Enviando o e-mail
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as smtp:
             smtp.starttls()
