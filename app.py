@@ -131,7 +131,7 @@ def get_user(id):
         return jsonify({'ID': f'{usuario.id}', 'Nome': f'{usuario.nome}', 'Email': f'{usuario.email}'})
     
     else:
-        return jsonify({'Error': 'Not Found'})
+        return jsonify({'Erro': 'Usuario não encontrado'})
     
 
 @app.route('/user/todos', methods=['GET'])
@@ -148,15 +148,82 @@ def atualizar_usuario(id):
     dados = request.get_json()
 
     if not usuario:
-        return jsonify({'Error': 'User not found'})
-    
-    if 'nome' in dados:
+        return jsonify({'Error': 'Usuario nao Encontrado'})
+
+    usuario_msm_nome = usuario.nome == dados['nome']
+    usuario_msm_email = usuario.email == dados['email']
+    usuario_msm_senha = bcrypt.check_password_hash(usuario.senha, dados['senha'])
+
+
+    if usuario_msm_nome and usuario_msm_email and usuario_msm_senha:
+        return jsonify({'Erro': 'Faça alguma mudança antes de enviar'})
+
+    email_padrao = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+
+    if not re.match(email_padrao, dados['email']):
+        return jsonify({'Erro': 'Digite um E-mail válido'})
+  
+    if 'nome' in dados and dados['nome']:
         usuario.nome = dados['nome']
     
-    if 'email' in dados:
+    else:
+        return jsonify({'Erro': 'Digite o nome de usuario para atualizar'})
+    
+    if 'email' in dados and dados['email']:
         usuario.email = dados['email']
     
+    else:
+        return jsonify({'Erro': 'Digite o E-mail para atualizar'})
+    
+    if 'senha' in dados and dados['senha']:
+        usuario.senha = bcrypt.generate_password_hash(dados['senha'])
+    
+    else:
+        return jsonify({'Erro': 'Digite a senha para alterar'})
+
+    
     db.session.commit()
+
+    smtp_server = 'smtp.gmail.com'
+    smtp_port = 587
+    sender_email = os.environ["email"]
+    sender_password = os.environ["senha_app"]
+
+    # Compondo o e-mail
+    msg = MIMEMultipart()
+    msg['Subject'] = 'Suas Informações Foram Atualizadas com Sucesso ✅'
+    msg['From'] = sender_email
+    msg['To'] = dados['email']
+
+    html = f"""
+            <html>
+            <body style="font-family: Arial">
+                <h1 style="color: blue;">Olá {dados['nome']},</h1>
+                <h2>Gostaríamos de informar que algumas informações na sua conta foram atualizadas com sucesso:</h2>
+                <ul>
+                    <li><b>Email:</b> {dados['email']}</li>
+                    <li><b>Nome:</b> {dados['nome']}</li>
+                    <li><b>Senha:</b> {dados['senha']}</li>
+                </ul>
+                <h3>Se você não solicitou essas alterações, por favor, entre em contato conosco imediatamente para garantirmos a segurança da sua conta.</h3>
+                <h4>Agradecemos pela sua atenção e estamos à disposição para qualquer dúvida.</a></h4>
+                <p style="color: gray;">Atenciosamente, Sistema</p>
+            </body>
+            </html>
+        """
+
+    msg.attach(MIMEText(html, 'html'))
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as smtp:
+            smtp.starttls()
+            smtp.login(sender_email, sender_password)
+            smtp.send_message(msg)
+            print('Email Enviado com Sucesso')
+
+    except:
+        print('Erro ao envio do E-mail')
+
     return jsonify({"mensagem": "Usuário atualizado com sucesso"})
 
 
@@ -173,7 +240,7 @@ def excluir_usuario(id):
     else:
         return jsonify({'Error': 'User not Found'})
 
-
+    
 
 
 app.run(debug=True)
