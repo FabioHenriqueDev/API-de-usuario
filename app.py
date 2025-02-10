@@ -27,7 +27,7 @@ bcrypt = Bcrypt(app)
 from models import Usuario
 
 with app.app_context():
-    
+    db.drop_all()
     db.create_all()
 
 @app.route('/user/create', methods=['POST'])
@@ -107,8 +107,12 @@ def create_user():
 
     msg.attach(MIMEText(html, 'html'))
 
-    db.session.add(usuario) 
-    db.session.commit()
+    try:
+        db.session.add(usuario) 
+        db.session.commit()
+    
+    except:
+        return jsonify({'Erro': 'Não foi possível adicionar o usuário'})
     
     # Enviando o e-mail
     try:
@@ -146,6 +150,7 @@ def login():
     return jsonify(
                     {
                         'mensage': 'Login feito com sucesso',
+                        'usuario': usuario.nome,
                         'tokens': {
                             "acesso": token_acesso,
                             'atualização': token_atualizacao
@@ -221,7 +226,11 @@ def atualizar_usuario(id):
     if len(dados['senha']) < 6:
         return jsonify({'Error': 'A senha deve ter mais que 5 caracteres'})
     
-    db.session.commit()
+    try:
+        db.session.commit()
+    
+    except:
+        return jsonify({'Erro': 'Não foi possível adicionar o usuário'})
 
     smtp_server = 'smtp.gmail.com'
     smtp_port = 587
