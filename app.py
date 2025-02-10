@@ -154,7 +154,7 @@ def login():
                         'mensage': 'Login feito com sucesso',
                         'tokens': {
                             "acesso": token_acesso,
-                            'refresh': token_atualizacao
+                            'atualização': token_atualizacao
                         }
                     }
                 ) , 200
