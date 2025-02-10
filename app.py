@@ -156,8 +156,6 @@ def login():
 
 
 
-
-
 @app.route('/user/<int:id>', methods=['GET'])
 def get_user(id):
     usuario = Usuario.query.get(id)
