@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from extensions import db
+from extensions import db, jwt
 from flask_cors import CORS
 import smtplib
 from email.mime.text import MIMEText
@@ -10,6 +10,8 @@ import os
 from dotenv import load_dotenv
 from flask_bcrypt import Bcrypt
 import re
+from flask_jwt_extended import create_access_token, create_refresh_token
+
 
 load_dotenv()
 
@@ -17,13 +19,15 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db.init_app(app) 
 CORS(app)
+jwt.init_app(app)
+app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 bcrypt = Bcrypt(app)
 
 from models import Usuario
 
 with app.app_context():
-    db.drop_all()
+    
     db.create_all()
 
 @app.route('/user/create', methods=['POST'])
@@ -70,8 +74,8 @@ def create_user():
     
 
      # Configurações do servidor SMTP
-    smtp_server = 'smtp.gmail.com'
-    smtp_port = 587
+    smtp_server = 'smtp.gmail.com' # variavel de ambiente
+    smtp_port = 587 # variavel de ambiente
     sender_email = os.environ["email"]
     sender_password = os.environ["senha_app"]
 
@@ -103,7 +107,7 @@ def create_user():
 
     msg.attach(MIMEText(html, 'html'))
 
-    db.session.add(usuario)
+    db.session.add(usuario) 
     db.session.commit()
     
     # Enviando o e-mail
@@ -120,6 +124,43 @@ def create_user():
    
 
     return jsonify({'mensage': 'User created'})
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    
+    dados = request.get_json()
+
+    if not 'email' in dados or not dados['email']:
+        return jsonify({'Erro': 'Informe o E-mail para fazer o Login'}), 400
+
+    if not 'senha' in dados or not dados['senha']:
+        return jsonify({'Erro': 'Informe a Senha para fazer o Login'}), 400
+    
+    usuario = Usuario.query.filter_by(email=dados['email']).first()
+   
+    if not usuario:
+        return jsonify({'Erro': 'E-mail ou Senha incorretos'}), 401
+
+    if not bcrypt.check_password_hash(usuario.senha, dados['senha']):
+        return jsonify({'Erro': 'E-mail ou Senha incorretos'}), 401
+
+    token_acesso = create_access_token(identity=usuario.email)
+    token_atualizacao = create_refresh_token(identity=usuario.email)
+
+    
+    return jsonify(
+                    {
+                        'mensage': 'Login feito com sucesso',
+                        'tokens': {
+                            "acesso": token_acesso,
+                            'refresh': token_atualizacao
+                        }
+                    }
+                ) , 200
+
+
+
 
 
 
@@ -181,6 +222,12 @@ def atualizar_usuario(id):
     else:
         return jsonify({'Erro': 'Digite a senha para alterar'})
 
+    if len(dados['nome']) < 2:
+        return jsonify({'Error': 'O Nome tem que ter no mínimo 2 caracteres'})
+
+
+    if len(dados['senha']) < 6:
+        return jsonify({'Error': 'A senha deve ter mais que 5 caracteres'})
     
     db.session.commit()
 
@@ -222,7 +269,7 @@ def atualizar_usuario(id):
             print('Email Enviado com Sucesso')
 
     except:
-        print('Erro ao envio do E-mail')
+        ('Erro ao envio do E-mail')
 
     return jsonify({"mensagem": "Usuário atualizado com sucesso"})
 
