@@ -131,12 +131,6 @@ def login():
     
     dados = request.get_json()
 
-    if not 'email' in dados or not dados['email']:
-        return jsonify({'Erro': 'Informe o E-mail para fazer o Login'}), 400
-
-    if not 'senha' in dados or not dados['senha']:
-        return jsonify({'Erro': 'Informe a Senha para fazer o Login'}), 400
-    
     usuario = Usuario.query.filter_by(email=dados['email']).first()
    
     if not usuario:
