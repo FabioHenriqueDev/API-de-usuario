@@ -221,11 +221,11 @@ def atualizar_usuario():
             return jsonify({'Erro': 'Digite a senha para alterar'})
 
         if len(dados['nome']) < 2:
-            return jsonify({'Error': 'O Nome tem que ter no mínimo 2 caracteres'})
+            return jsonify({'Erro': 'O Nome tem que ter no mínimo 2 caracteres'})
 
 
         if len(dados['senha']) < 6:
-            return jsonify({'Error': 'A senha deve ter mais que 5 caracteres'})
+            return jsonify({'Erro': 'A senha deve ter mais que 5 caracteres'})
         
         try:
             db.session.commit()
