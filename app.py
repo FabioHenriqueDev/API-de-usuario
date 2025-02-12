@@ -294,6 +294,4 @@ def excluir_usuario(id):
         return jsonify({'Error': 'User not Found'})
 
     
-
-
 app.run(debug=True)
