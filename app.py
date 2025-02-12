@@ -10,7 +10,7 @@ import os
 from dotenv import load_dotenv
 from flask_bcrypt import Bcrypt
 import re
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 
 
 load_dotenv()
@@ -60,20 +60,18 @@ def create_user():
 
     senha_criptografada = bcrypt.generate_password_hash(dados['senha'])
 
+    email_existente = db.session.query(Usuario).filter_by(email=dados['email']).first()
+    
+    if email_existente:
+        return jsonify({'Erro': 'Esse Email ja existe!'})
+
     usuario= Usuario(
         nome=dados['nome'],
         email=dados['email'],
         senha=senha_criptografada
     )
 
-
-    email_existente = db.session.query(Usuario).filter_by(email=dados['email']).first()
-    
-    if email_existente:
-        return jsonify({'Error': 'existing Email'})
-    
-
-     # Configurações do servidor SMTP
+    # Configurações do servidor SMTP
     smtp_server = 'smtp.gmail.com' # variavel de ambiente
     smtp_port = 587 # variavel de ambiente
     sender_email = os.environ["email"]
@@ -180,99 +178,106 @@ def mostrar_usuarios():
 
 
 
-@app.route('/user/atualizar/<int:id>', methods=['PUT'])
-def atualizar_usuario(id):
-    usuario = Usuario.query.get(id)
-    dados = request.get_json()
+@app.route('/user/atualizar', methods=['PUT'])
+@jwt_required()
+def atualizar_usuario():
+    try:  
+        usuario_email = get_jwt_identity() # Pegando email do usuario a partir do token de acesso 
+        usuario = Usuario.query.filter_by(email=usuario_email).first()
+        dados = request.get_json()
 
-    if not usuario:
-        return jsonify({'Error': 'Usuario nao Encontrado'})
+        if not usuario:
+            return jsonify({'Error': 'Usuario nao Encontrado'})
 
-    usuario_msm_nome = usuario.nome == dados['nome']
-    usuario_msm_email = usuario.email == dados['email']
-    usuario_msm_senha = bcrypt.check_password_hash(usuario.senha, dados['senha'])
+        usuario_msm_nome = usuario.nome == dados['nome']
+        usuario_msm_email = usuario.email == dados['email']
+        usuario_msm_senha = bcrypt.check_password_hash(usuario.senha, dados['senha'])
 
 
-    if usuario_msm_nome and usuario_msm_email and usuario_msm_senha:
-        return jsonify({'Erro': 'Faça alguma mudança antes de enviar'})
+        if usuario_msm_nome and usuario_msm_email and usuario_msm_senha:
+            return jsonify({'Erro': 'Faça alguma mudança antes de enviar'})
 
-    email_padrao = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+        email_padrao = r'^[\w\.-]+@[\w\.-]+\.\w+$'
 
-    if not re.match(email_padrao, dados['email']):
-        return jsonify({'Erro': 'Digite um E-mail válido'})
-  
-    if 'nome' in dados and dados['nome']:
-        usuario.nome = dados['nome']
+        if not re.match(email_padrao, dados['email']):
+            return jsonify({'Erro': 'Digite um E-mail válido'})
     
-    else:
-        return jsonify({'Erro': 'Digite o nome de usuario para atualizar'})
+        if 'nome' in dados and dados['nome']:
+            usuario.nome = dados['nome']
+        
+        else:
+            return jsonify({'Erro': 'Digite o nome de usuario para atualizar'})
+        
+        if 'email' in dados and dados['email']:
+            usuario.email = dados['email']
+        
+        else:
+            return jsonify({'Erro': 'Digite o E-mail para atualizar'})
+        
+        if 'senha' in dados and dados['senha']:
+            usuario.senha = bcrypt.generate_password_hash(dados['senha'])
+        
+        else:
+            return jsonify({'Erro': 'Digite a senha para alterar'})
+
+        if len(dados['nome']) < 2:
+            return jsonify({'Error': 'O Nome tem que ter no mínimo 2 caracteres'})
+
+
+        if len(dados['senha']) < 6:
+            return jsonify({'Error': 'A senha deve ter mais que 5 caracteres'})
+        
+        try:
+            db.session.commit()
+        
+        except:
+            return jsonify({'Erro': 'Não foi possível adicionar o usuário'})
+
+        smtp_server = 'smtp.gmail.com'
+        smtp_port = 587
+        sender_email = os.environ["email"]
+        sender_password = os.environ["senha_app"]
+
+        # Compondo o e-mail
+        msg = MIMEMultipart()
+        msg['Subject'] = 'Suas Informações Foram Atualizadas com Sucesso ✅'
+        msg['From'] = sender_email
+        msg['To'] = dados['email']
+
+        html = f"""
+                <html>
+                <body style="font-family: Arial">
+                    <h1 style="color: blue;">Olá {dados['nome']},</h1>
+                    <h2>Gostaríamos de informar que algumas informações na sua conta foram atualizadas com sucesso:</h2>
+                    <ul>
+                        <li><b>Email:</b> {dados['email']}</li>
+                        <li><b>Nome:</b> {dados['nome']}</li>
+                        <li><b>Senha:</b> {dados['senha']}</li>
+                    </ul>
+                    <h3>Se você não solicitou essas alterações, por favor, entre em contato conosco imediatamente para garantirmos a segurança da sua conta.</h3>
+                    <h4>Agradecemos pela sua atenção e estamos à disposição para qualquer dúvida.</a></h4>
+                    <p style="color: gray;">Atenciosamente, Sistema</p>
+                </body>
+                </html>
+            """
+
+        msg.attach(MIMEText(html, 'html'))
+
+        try:
+            with smtplib.SMTP(smtp_server, smtp_port) as smtp:
+                smtp.starttls()
+                smtp.login(sender_email, sender_password)
+                smtp.send_message(msg)
+                print('Email Enviado com Sucesso')
+
+        except:
+            ('Erro ao envio do E-mail')
+
+        return jsonify({"mensagem": "Usuário atualizado com sucesso"})
     
-    if 'email' in dados and dados['email']:
-        usuario.email = dados['email']
-    
-    else:
-        return jsonify({'Erro': 'Digite o E-mail para atualizar'})
-    
-    if 'senha' in dados and dados['senha']:
-        usuario.senha = bcrypt.generate_password_hash(dados['senha'])
-    
-    else:
-        return jsonify({'Erro': 'Digite a senha para alterar'})
-
-    if len(dados['nome']) < 2:
-        return jsonify({'Error': 'O Nome tem que ter no mínimo 2 caracteres'})
-
-
-    if len(dados['senha']) < 6:
-        return jsonify({'Error': 'A senha deve ter mais que 5 caracteres'})
-    
-    try:
-        db.session.commit()
-    
-    except:
-        return jsonify({'Erro': 'Não foi possível adicionar o usuário'})
-
-    smtp_server = 'smtp.gmail.com'
-    smtp_port = 587
-    sender_email = os.environ["email"]
-    sender_password = os.environ["senha_app"]
-
-    # Compondo o e-mail
-    msg = MIMEMultipart()
-    msg['Subject'] = 'Suas Informações Foram Atualizadas com Sucesso ✅'
-    msg['From'] = sender_email
-    msg['To'] = dados['email']
-
-    html = f"""
-            <html>
-            <body style="font-family: Arial">
-                <h1 style="color: blue;">Olá {dados['nome']},</h1>
-                <h2>Gostaríamos de informar que algumas informações na sua conta foram atualizadas com sucesso:</h2>
-                <ul>
-                    <li><b>Email:</b> {dados['email']}</li>
-                    <li><b>Nome:</b> {dados['nome']}</li>
-                    <li><b>Senha:</b> {dados['senha']}</li>
-                </ul>
-                <h3>Se você não solicitou essas alterações, por favor, entre em contato conosco imediatamente para garantirmos a segurança da sua conta.</h3>
-                <h4>Agradecemos pela sua atenção e estamos à disposição para qualquer dúvida.</a></h4>
-                <p style="color: gray;">Atenciosamente, Sistema</p>
-            </body>
-            </html>
-        """
-
-    msg.attach(MIMEText(html, 'html'))
-
-    try:
-        with smtplib.SMTP(smtp_server, smtp_port) as smtp:
-            smtp.starttls()
-            smtp.login(sender_email, sender_password)
-            smtp.send_message(msg)
-            print('Email Enviado com Sucesso')
-
-    except:
-        ('Erro ao envio do E-mail')
-
-    return jsonify({"mensagem": "Usuário atualizado com sucesso"})
+    except Exception as e:
+        print(f"Erro: {e}")
+        return jsonify({'Erro': 'Ocorreu um erro no servidor'}), 500
 
 
 
