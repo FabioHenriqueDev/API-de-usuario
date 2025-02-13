@@ -281,17 +281,28 @@ def atualizar_usuario():
 
 
 
-@app.route('/user/excluir/<int:id>', methods=['DELETE'])
-def excluir_usuario(id):
-    usuario = Usuario.query.get(id)
+@app.route('/user/excluir', methods=['DELETE'])
+@jwt_required()
+def excluir_usuario():
 
-    if usuario:
-        db.session.delete(usuario)
-        db.session.commit()
-        return jsonify({'Sucess': 'User deleted'})
+    dados = request.get_json()
+    print(f"Dados enviados pelo usuário: {dados}")
 
-    else:
-        return jsonify({'Error': 'User not Found'})
+    if not dados or 'email' not in dados or not dados['email']:
+        return jsonify({'Erro': 'Digite as informações do email'})
+
+    usuario_email = get_jwt_identity() # Pegando email do usuario a partir do token de acesso 
+    usuario = Usuario.query.filter_by(email=usuario_email).first()
+    
+    if not usuario:
+        return  jsonify({'Erro': "E-mail nao encontrado."}), 404
+
+    
+    db.session.delete(usuario)
+    db.session.commit()
+    return jsonify({'Sucesso': 'Usuario deletado'})
+
+    
 
     
 app.run(debug=True)
