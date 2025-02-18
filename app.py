@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from flask_bcrypt import Bcrypt
 import re
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+import secrets
 
 
 load_dotenv()
@@ -24,7 +25,7 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 bcrypt = Bcrypt(app)
 
-from models import Usuario
+from models import Usuario, CodigoVerificacao
 
 with app.app_context():
     
@@ -271,7 +272,7 @@ def atualizar_usuario():
                 print('Email Enviado com Sucesso')
 
         except:
-            ('Erro ao envio do E-mail')
+            print('Erro ao envio do E-mail')
 
         return jsonify({"mensagem": "Usuário atualizado com sucesso"})
     
@@ -302,7 +303,93 @@ def excluir_usuario():
     db.session.commit()
     return jsonify({'Sucesso': 'Usuario deletado'})
 
+
+@app.route('/esqueceusenha', methods=['POST'])
+def esqueceu_senha():
+    dados = request.get_json()
+
+    if not dados or 'email' not in dados or not dados['email']:
+        return jsonify({'Erro': 'Digite seu E-mail para continuar...'})
+
+    email_usuario = Usuario.query.filter_by(email=dados['email']).first()
+
+    if not email_usuario:
+        return jsonify({'Erro': 'Esse E-mail não foi cadastrado no nosso sistema.'})
+
+    codigo = secrets.token_hex(3).upper()
+
+    smtp_server = 'smtp.gmail.com'
+    smtp_port = 587
+    sender_email = os.environ["email"]
+    sender_password = os.environ["senha_app"]
+
+    # Compondo o e-mail
+    msg = MIMEMultipart()
+    msg['Subject'] = 'Código de Verificação ✅'
+    msg['From'] = sender_email
+    msg['To'] = dados['email']
+
+    html = f"""
+            <html>
+                <body style="font-family: Arial">
+                    <h2>Código para completar a verificação:</h2>
+                    <p>Use esse código para completar a verificação</p>
+                    <b><p>Aqui está seu código: </p><h4>{codigo}</h4></b>
+                    <p>Este é um e-mail automático por favor, não responda.</p>
+                </body>
+            </html>
+        """
+
+    msg.attach(MIMEText(html, 'html'))
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as smtp:
+            smtp.starttls()
+            smtp.login(sender_email, sender_password)
+            smtp.send_message(msg)
+            print('Código Enviado com Sucesso')
+            
+
+    except:
+        print('Erro ao envio do E-mail')
+
+    codigo_db = CodigoVerificacao(codigo=codigo, id_usuario=email_usuario.id, email_usuario=dados['email'])
+
+    verificacao = CodigoVerificacao.query.filter(CodigoVerificacao.codigo.isnot(None), CodigoVerificacao.id_usuario == email_usuario.id).first()
+
+    if verificacao:
+        verificacao.codigo = codigo
+        db.session.commit()
+        return jsonify({'Sucesso': 'Codigo alterado no banco por ja existir'})
+
+    else:
+        try:
+            db.session.add(codigo_db)
+            db.session.commit()
+            return jsonify({'Sucesso': 'Código adiconado no banco de dados'})
+            
+        
+        except Exception as e:
+            print(f'Erro {e}')
+            return jsonify({'Erro': f'{e}'})
+
+
+
+@app.route('/validarcodigo', methods=['POST'])
+def validar_codigo():
+    dados = request.get_json()
+
+    if not dados or 'codigo' not in dados or not dados['codigo']:
+        return jsonify({'Erro': 'Digite seu codigo para continuar...'})
     
+    codigo_usuario = CodigoVerificacao.query.filter_by(codigo=dados['codigo']).first()
+
+    if codigo_usuario:
+        return jsonify({'Sucesso': 'Código verificado com sucesso.'})
+
+    else:
+        return jsonify({'Erro': 'Código de verificação inválido.'})
+
 
     
 app.run(debug=True)
