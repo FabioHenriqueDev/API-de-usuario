@@ -384,12 +384,30 @@ def validar_codigo():
     
     codigo_usuario = CodigoVerificacao.query.filter_by(codigo=dados['codigo']).first()
 
-    if codigo_usuario:
-        return jsonify({'Sucesso': 'Código verificado com sucesso.'})
-
-    else:
+    if not codigo_usuario:
         return jsonify({'Erro': 'Código de verificação inválido.'})
 
+
+    usuario = Usuario.query.filter_by(id=codigo_usuario.id_usuario).first()
+
+    if not usuario:
+        return jsonify({'Erro': 'Usuário não encontrado.'})
+
+    if not dados or 'nova_senha' not in dados or not dados['nova_senha']:
+        return jsonify({'Erro': 'Digite sua nova senha para continuar...'})
+
+    try:
+
+        if len(dados['nova_senha']) < 6:
+            return jsonify({'Erro': 'A senha tem que ser maior ou igual que 6'})
+
+        usuario.senha = bcrypt.generate_password_hash(dados['nova_senha'])
+        db.session.commit()
+        return jsonify({'Sucesso': 'Senha alterada com sucesso.'})
+
+    except Exception as e:
+        print(f'Erro {e}')
+        return jsonify({'Erro': f'{e}'})
 
     
 app.run(debug=True)
