@@ -1,6 +1,6 @@
 API de Gerenciamento de Usuários com Flask e SQLAlchemy 🚀
 
-A API de Usuários foi desenvolvida para realizar operações CRUD (Create, Read, Update, Delete) e agora conta com funcionalidades aprimoradas, incluindo autenticação JWT, envio automático de e-mails e melhorias na segurança.
+A API de Usuários foi desenvolvida para realizar operações CRUD (Create, Read, Update, Delete) e agora conta com funcionalidades aprimoradas, incluindo autenticação JWT, envio automático de e-mails e melhorias na segurança.<br><br><br>
 
 🔥 Funcionalidades Principais
 
@@ -22,7 +22,8 @@ A API de Usuários foi desenvolvida para realizar operações CRUD (Create, Read
 
 ✅ Segurança reforçada com hash de senhas e controle de acessos
 
-✅ Suporte a requisições entre domínios com Flask-CORS
+✅ Suporte a requisições entre domínios com Flask-CORS<br><br><br>
+
 
 🛠️ Tecnologias Utilizadas
 
@@ -38,11 +39,11 @@ Flask-JWT-Extended para autenticação e segurança 🔑
 
 Flask-CORS para permitir comunicação entre domínios
 
-Flask-JSONify para manipulação eficiente de respostas JSON
+Flask-JSONify para manipulação eficiente de respostas JSON<br><br><br>
 
 🚀 Melhorias e Planejamentos Futuros
 
-🔒 Reforçar ainda mais a segurança na autenticação e armazenamento de senhas📄 Implementar paginação na listagem de usuários🔄 Aprimorar o sistema de recuperação de senha via e-mail🗂️ Melhorar a organização e modularização do código para escalabilidade
+🔒 Reforçar ainda mais a segurança na autenticação e armazenamento de senhas📄 Implementar paginação na listagem de usuários🔄 Aprimorar o sistema de recuperação de senha via e-mail🗂️ Melhorar a organização e modularização do código para escalabilidade<br><br><br>
 
 💡 Contribuição
 
