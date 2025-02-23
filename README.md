@@ -1,12 +1,51 @@
-A API de Gerenciamento de Usuários com Flask e SQLAlchemy 🚀 foi desenvolvida para realizar operações CRUD (Create, Read, Update, Delete) em usuários. Além disso, agora conta com autenticação JWT 🔐 para login seguro e envio automático de e-mail ✉️ ao cadastrar um novo usuário.
+API de Gerenciamento de Usuários com Flask e SQLAlchemy 🚀
 
-Entre as principais funcionalidades, a API permite ✅ criar um usuário com nome, e-mail e senha, ✅ enviar um e-mail de boas-vindas após o cadastro, ✅ listar todos os usuários cadastrados, ✅ buscar um usuário pelo ID, ✅ atualizar informações e ✅ excluir usuários do banco de dados. Com a autenticação JWT 🔑, os usuários podem realizar login de forma segura.
+A API de Usuários foi desenvolvida para realizar operações CRUD (Create, Read, Update, Delete) e agora conta com funcionalidades aprimoradas, incluindo autenticação JWT, envio automático de e-mails e melhorias na segurança.
 
-A tecnologia utilizada inclui Python + Flask 🐍, com Flask-SQLAlchemy como ORM para o banco de dados SQLite. Para manipulação de respostas JSON, utiliza-se Flask-JSONify, enquanto o Flask-Mail gerencia o envio de e-mails 📩. A segurança foi aprimorada com Flask-JWT-Extended 🔐 para autenticação, Flask-Bcrypt para hash de senhas e Flask-CORS para permitir requisições entre domínios.
+🔥 Funcionalidades Principais
 
-Para o futuro, há planos de 🔒 melhorar a segurança da autenticação e do armazenamento de senhas, 📄 implementar paginação na listagem de usuários, 🔄 criar um sistema de recuperação de senha via e-mail e 🗂️ aprimorar a organização e modularização do código.
+✅ Criar um usuário com nome, e-mail e senha
 
-⚡ Se quiser contribuir para o projeto, fique à vontade para abrir issues ou enviar pull requests no repositório no GitHub:
-🔗 API de Usuários
+✅ Enviar um e-mail de boas-vindas após o cadastro
+
+✅ Listar todos os usuários cadastrados
+
+✅ Buscar um usuário pelo ID
+
+✅ Atualizar informações de um usuário
+
+✅ Excluir usuários do banco de dados
+
+✅ Autenticação JWT para login seguro 🔐
+
+✅ Recuperação de senha via e-mail 📩
+
+✅ Segurança reforçada com hash de senhas e controle de acessos
+
+✅ Suporte a requisições entre domínios com Flask-CORS
+
+🛠️ Tecnologias Utilizadas
+
+Python + Flask 🐍 para desenvolvimento web
+
+Flask-SQLAlchemy como ORM para o banco de dados SQLite
+
+Flask-Mail para gerenciamento de e-mails 📩
+
+Flask-Bcrypt para hash e proteção de senhas 🔐
+
+Flask-JWT-Extended para autenticação e segurança 🔑
+
+Flask-CORS para permitir comunicação entre domínios
+
+Flask-JSONify para manipulação eficiente de respostas JSON
+
+🚀 Melhorias e Planejamentos Futuros
+
+🔒 Reforçar ainda mais a segurança na autenticação e armazenamento de senhas📄 Implementar paginação na listagem de usuários🔄 Aprimorar o sistema de recuperação de senha via e-mail🗂️ Melhorar a organização e modularização do código para escalabilidade
+
+💡 Contribuição
+
+Se quiser contribuir para o projeto, fique à vontade para abrir issues ou enviar pull requests no repositório no GitHub. Toda ajuda é bem-vinda!
 
 📌 Desenvolvido por Fábio Henrique 🚀
